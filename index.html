@@ -1,6 +1,31 @@
-function revealMinesSequentially() {
-    for (let mine of mines) {
-        revealed[mine.x][mine.y] = true; // Mark the mine as revealed
-        // Add code to visually reveal the mine on the board here...
-    }
-}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minesweeper</title>
+    <style>
+        /* Add your styles here */
+    </style>
+</head>
+<body>
+    <script>
+        // Minesweeper game logic
+
+        function revealMinesSequentially() {
+            // Previous code before line 425
+            // Assuming 'mines' is an array of mines
+
+            for (let i = 0; i < mines.length; i++) {
+                let r = mines[i].row;
+                let c = mines[i].col;
+                // After line 425: mark the mine as revealed
+                revealed[r][c] = true;
+                // Logic to reveal the mine
+                // After line 445: mark the mine as revealed in the sequence
+                revealed[r][c] = true;
+            }
+
+            // Continue with the rest of the code
+        }
+    </script>
+</body>
+</html>
