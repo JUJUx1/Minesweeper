@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Classic Minesweeper — MS Sans</title>
+<title>Classic Minesweeper — MS Sans (fixed)</title>
 <style>
   @font-face {
     font-family: "MS Sans";
@@ -19,6 +19,10 @@
     --ms-shadow: #808080;
   }
 
+  html,body {
+    height: 100%;
+  }
+
   body {
     background-color: #008080;
     display: flex;
@@ -27,7 +31,7 @@
     justify-content: center;
     height: 100vh;
     margin: 0;
-    touch-action: none;
+    touch-action: none; /* disables default scroll so touch events behave predictably */
     font-family: "MS Sans", "Microsoft Sans Serif", "Segoe UI", Arial, sans-serif;
     overflow: hidden;
   }
@@ -59,7 +63,7 @@
   .lcd {
     background: black;
     color: #ff2b2b;
-    font-family: "MS Sans", "Microsoft Sans Serif", "Segoe UI", Arial, sans-serif;
+    font-family: "MS Sans", sans-serif;
     font-size: 28px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -83,6 +87,8 @@
     display: grid;
     border: 3px solid;
     border-color: var(--ms-shadow) var(--ms-white) var(--ms-white) var(--ms-shadow);
+    position: relative;
+    background: #d7d7d7;
   }
 
   .cell {
@@ -92,11 +98,10 @@
     image-rendering: pixelated;
     cursor: pointer;
     box-sizing: border-box;
+    display: inline-block;
   }
 
-  .cell.reveal-animate {
-    animation: pop .14s ease;
-  }
+  .cell.reveal-animate { animation: pop .14s ease; }
 
   @keyframes pop {
     0% { transform: scale(.3); opacity: 0; }
@@ -104,33 +109,27 @@
     100% { transform: scale(1); }
   }
 
-  /* --- Visitor Counter Styling --- */
   .footer-stats {
-    margin-top: 8px;
-    padding: 4px;
+    margin-top: 10px;
+    padding: 6px;
     display: flex;
     justify-content: center;
     border: 2px solid;
     border-color: var(--ms-shadow) var(--ms-white) var(--ms-white) var(--ms-shadow);
-    font-size: 10px;
-    color: #444;
+    background: #b4b4b4;
   }
 
-  .mobile-tools {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-  }
+  .mobile-tools { margin-top: 20px; display: flex; gap: 10px; justify-content:center; }
 
   .btn-flag {
-    padding: 12px 24px;
+    padding: 12px 20px;
     background: var(--ms-gray);
     border: 3px solid;
     border-color: var(--ms-white) var(--ms-shadow) var(--ms-shadow) var(--ms-white);
     font-weight: bold;
-    font-size: 16px;
-    color: black;
     cursor: pointer;
+    border-radius: 6px;
+    user-select: none;
   }
 
   .btn-flag.active {
@@ -138,7 +137,7 @@
     background: #a0a0a0;
   }
 
-  /* Boom Animations */
+  /* boom main radial flash */
   .boom {
     position: fixed;
     pointer-events: none;
@@ -147,39 +146,46 @@
     border-radius: 50%;
     transform: translate(-50%,-50%) scale(0.2);
     mix-blend-mode: screen;
-    background: radial-gradient(circle, rgba(255,230,120,0.98) 0%, rgba(255,140,30,0.9) 36%, rgba(200,40,10,0.75) 62%, rgba(0,0,0,0) 72%);
-    filter: blur(6px) saturate(120%);
+    background: radial-gradient(circle, rgba(255,230,120,0.98) 0%, rgba(255,140,30,0.95) 36%, rgba(200,40,10,0.75) 62%, rgba(0,0,0,0) 72%);
+    filter: blur(6px);
     animation: boomAnim 560ms cubic-bezier(.12,.8,.33,1) forwards;
     z-index: 9999;
+    will-change: transform, opacity;
   }
 
   @keyframes boomAnim {
     0% { transform: translate(-50%,-50%) scale(0.25); opacity: 1; }
-    60% { transform: translate(-50%,-50%) scale(1.6); opacity: 0.95; }
+    60% { transform: translate(-50%,-50%) scale(1.6); opacity: 0.9; }
     100% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
   }
 
-  .boom-ring {
+  /* shake effect */
+  .shake {
+    animation: shakeAnim 420ms cubic-bezier(.12,.8,.33,1);
+  }
+  @keyframes shakeAnim {
+    0% { transform: translate(0,0); }
+    20% { transform: translate(-6px,3px) rotate(-1deg); }
+    40% { transform: translate(6px,-3px) rotate(1deg); }
+    60% { transform: translate(-3px,2px) rotate(-0.5deg); }
+    80% { transform: translate(3px,-2px) rotate(0.5deg); }
+    100% { transform: translate(0,0); }
+  }
+
+  /* particle style (tiny sparks) */
+  .particle {
     position: fixed;
-    pointer-events: none;
-    width: 180px;
-    height: 180px;
-    transform: translate(-50%,-50%) scale(0.2);
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    border: 2px solid rgba(255,180,80,0.85);
-    box-shadow: 0 0 22px 8px rgba(255,120,40,0.16);
-    animation: ringAnim 480ms cubic-bezier(.2,.9,.25,1) forwards;
-    z-index: 9998;
+    pointer-events: none;
+    z-index: 10000;
+    will-change: transform, opacity;
+    background: radial-gradient(circle, rgba(255,230,120,1) 0%, rgba(255,110,20,1) 50%, rgba(200,40,10,1) 100%);
+    filter: blur(0.8px);
   }
 
-  @keyframes ringAnim {
-    0% { transform: translate(-50%,-50%) scale(0.25); opacity: 0.95; }
-    100% { transform: translate(-50%,-50%) scale(1.8); opacity: 0; }
-  }
-
-  @media (max-width:420px) {
-    .cell { width: 28px; height: 28px; }
-  }
+  @media (max-width:420px) { .cell { width: 28px; height: 28px; } }
 </style>
 </head>
 <body>
@@ -187,15 +193,13 @@
 <div class="window">
   <div class="inner-container">
     <div class="header">
-      <div id="mine-count" class="lcd">000</div>
-      <div id="smiley" onclick="initGame()"></div>
+      <div id="mine-count" class="lcd">015</div>
+      <div id="smiley" role="button" aria-label="Restart"></div>
       <div id="timer" class="lcd">000</div>
     </div>
-    
-    <div id="board"></div>
-
+    <div id="board" aria-hidden="false"></div>
     <div class="footer-stats">
-      <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FJUJUx1%2FMinesweeper&count_bg=%23008080&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=VISITORS&edge_flat=false" alt="Visitors"/>
+      <img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fjujux1.github.io%2FMinesweeper&labelColor=%23555555&countColor=%23263759&style=flat" alt="Visitors"/>
     </div>
   </div>
 </div>
@@ -205,48 +209,60 @@
 </div>
 
 <script>
-/* ---------- ASSETS & SOUNDS ---------- */
+/* ---------- CONFIG & ASSETS ---------- */
 const ASSETS = {
-  hidden: 'sprites/closed.png',
-  flag: 'sprites/flag.png',
-  mine: 'sprites/mine.png',
-  mineDeath: 'sprites/mine_red.png',
-  empty: 'sprites/0.png',
-  n1: 'sprites/1.png', n2: 'sprites/2.png', n3: 'sprites/3.png', n4: 'sprites/4.png',
-  n5: 'sprites/5.png', n6: 'sprites/6.png', n7: 'sprites/7.png', n8: 'sprites/8.png',
+  hidden: 'sprites/closed.png', flag: 'sprites/flag.png',
+  mine: 'sprites/mine.png', mineDeath: 'sprites/mine_red.png',
+  empty: 'sprites/0.png', n1: 'sprites/1.png', n2: 'sprites/2.png',
+  n3: 'sprites/3.png', n4: 'sprites/4.png', n5: 'sprites/5.png',
+  n6: 'sprites/6.png', n7: 'sprites/7.png', n8: 'sprites/8.png',
   smile: 'sprites/smile.png', dead: 'sprites/dead.png', win: 'sprites/win.png', ooh: 'sprites/ooh.png'
 };
 
 const SOUNDS = {
-  start: (() => { try { return new Audio('sounds/start.mp3'); } catch(e){return null;} })(),
-  click: (() => { try { return new Audio('sounds/click.mp3'); } catch(e){return null;} })(),
-  flag: (() => { try { return new Audio('sounds/flag.mp3'); } catch(e){return null;} })(),
-  boom: (() => { try { return new Audio('sounds/boom.mp3'); } catch(e){return null;} })(),
-  win: (() => { try { return new Audio('sounds/win.mp3'); } catch(e){return null;} })(),
-  tick: (() => { try { return new Audio('sounds/tick.mp3'); } catch(e){return null;} })()
+  start: new Audio('sounds/start.mp3'), click: new Audio('sounds/click.mp3'),
+  flag: new Audio('sounds/flag.mp3'), boom: new Audio('sounds/boom.mp3'),
+  win: new Audio('sounds/win.mp3'), tick: new Audio('sounds/tick.mp3')
 };
 
-/* ---------- GAME SETTINGS & TIMEOUT FIX ---------- */
+/* Safe audio play helper (some browsers require user gesture) */
+function safePlay(audio) {
+  try {
+    if (!audio) return;
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && p.catch) p.catch(()=>{}); // swallow play promise rejections
+  } catch(e){}
+}
+
 const rows = 10, cols = 10, minesTotal = 15;
 let grid, revealed, flagged, isOver, firstMove, mode = 'dig', timerInterval, seconds;
-let animationTimeouts = []; // STORE ALL TIMEOUTS HERE
+let animationTimeouts = [];
 
 function playSound(key) {
   try {
     const s = SOUNDS[key];
-    if (s) { s.currentTime = 0; s.play().catch(()=>{}); }
+    if (s) safePlay(s);
   } catch (e) {}
 }
 
 function setCellImg(el, key) {
   if (!el) return;
-  el.style.backgroundImage = `url('${ASSETS[key]}')`;
+  const src = ASSETS[key] || ASSETS.hidden;
+  el.style.backgroundImage = `url('${src}')`;
 }
 
+/* Preload assets (images) */
+(function preloadImages() {
+  Object.values(ASSETS).forEach(src => {
+    const i = new Image();
+    i.src = src;
+  });
+})();
+
+/* ---------- CORE ENGINE ---------- */
 function initGame() {
   playSound('start');
-
-  // FIX: Clear all pending mine animations from previous loss
   animationTimeouts.forEach(clearTimeout);
   animationTimeouts = [];
 
@@ -262,6 +278,7 @@ function initGame() {
 
   const board = document.getElementById('board');
   board.innerHTML = '';
+  const cellSize = getComputedStyle(document.documentElement).getPropertyValue('--cell-size') || null;
   board.style.gridTemplateColumns = `repeat(${cols}, 30px)`;
 
   for (let r = 0; r < rows; r++) {
@@ -269,14 +286,42 @@ function initGame() {
       const cell = document.createElement('div');
       cell.className = 'cell';
       cell.id = `c-${r}-${c}`;
+      cell.dataset.r = r;
+      cell.dataset.c = c;
       setCellImg(cell, 'hidden');
-      cell.onclick = () => handleInput(r, c);
-      cell.oncontextmenu = (e) => { e.preventDefault(); handleFlag(r, c); };
+
+      /* Pointer handling for both mouse & touch - use pointer events if available */
+      cell.addEventListener('pointerdown', (ev) => {
+        if (isOver) return;
+        ev.preventDefault();
+        document.getElementById('smiley').style.backgroundImage = `url('${ASSETS.ooh}')`;
+      });
+
+      cell.addEventListener('pointerup', (ev) => {
+        if (isOver) return;
+        ev.preventDefault();
+        document.getElementById('smiley').style.backgroundImage = `url('${ASSETS.smile}')`;
+      });
+
+      // click (primary)
+      cell.addEventListener('click', (e) => {
+        const rr = +cell.dataset.r, cc = +cell.dataset.c;
+        handleInput(rr, cc);
+      });
+
+      // contextmenu for right-click (desktop). On mobile use the MODE toggle.
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const rr = +cell.dataset.r, cc = +cell.dataset.c;
+        handleFlag(rr, cc);
+      });
+
       board.appendChild(cell);
     }
   }
 }
 
+/* Handle input depending on mode */
 function handleInput(r, c) {
   if (isOver) return;
   if (mode === 'flag') return handleFlag(r, c);
@@ -284,28 +329,20 @@ function handleInput(r, c) {
   doReveal(r, c);
 }
 
-function toggleMode() {
-  mode = mode === 'dig' ? 'flag' : 'dig';
-  const btn = document.getElementById('mode-toggle');
-  btn.textContent = mode === 'dig' ? 'MODE: ⛏️ Dig' : 'MODE: 🚩 Flag';
-  btn.classList.toggle('active');
-}
-
 function handleFlag(r, c) {
   if (revealed[r][c] || isOver) return;
   flagged[r][c] = !flagged[r][c];
   setCellImg(document.getElementById(`c-${r}-${c}`), flagged[r][c] ? 'flag' : 'hidden');
   playSound('flag');
-  const fCount = Array.from(flagged.flat()).filter(Boolean).length;
+  const fCount = flagged.flat().filter(Boolean).length;
   document.getElementById('mine-count').textContent = Math.max(0, minesTotal - fCount).toString().padStart(3, '0');
 }
 
+/* Reveal logic */
 function doReveal(r, c) {
   if (flagged[r][c] || revealed[r][c] || isOver) return;
-
   if (firstMove) {
-    generateMines(r, c);
-    firstMove = false;
+    generateMines(r, c); firstMove = false;
     timerInterval = setInterval(() => {
       seconds = Math.min(seconds + 1, 999);
       document.getElementById('timer').textContent = seconds.toString().padStart(3, '0');
@@ -319,44 +356,39 @@ function doReveal(r, c) {
 
   if (val === 'M') {
     setCellImg(el, 'mineDeath');
-    playSound('boom');
-    endGame(false, r, c);
-    return;
+    playSound('boom'); endGame(false, r, c); return;
   }
 
   playSound('click');
   setCellImg(el, val === 0 ? 'empty' : `n${val}`);
   el.classList.add('reveal-animate');
-  animationTimeouts.push(setTimeout(() => el.classList.remove('reveal-animate'), 180));
+  animationTimeouts.push(setTimeout(() => el.classList.remove('reveal-animate'), 200));
 
-  if (val === 0) {
-    getNeighbors(r, c).forEach(([nr, nc]) => doReveal(nr, nc));
-  }
+  if (val === 0) getNeighbors(r, c).forEach(([nr, nc]) => doReveal(nr, nc));
   checkWin();
+}
+
+/* ---------- HELPER LOGIC ---------- */
+function chord(r, c) {
+  const val = grid[r][c];
+  if (!val || val === 'M') return;
+  const neighbors = getNeighbors(r, c);
+  const fCount = neighbors.filter(([nr, nc]) => flagged[nr][nc]).length;
+  if (fCount === val) neighbors.forEach(([nr, nc]) => doReveal(nr, nc));
 }
 
 function generateMines(exR, exC) {
   let p = 0;
   while (p < minesTotal) {
     let r = Math.floor(Math.random() * rows), c = Math.floor(Math.random() * cols);
-    if (Math.abs(r - exR) <= 1 && Math.abs(c - exC) <= 1) continue;
-    if (grid[r][c] !== 'M') { grid[r][c] = 'M'; p++; }
+    if ((Math.abs(r - exR) <= 1 && Math.abs(c - exC) <= 1) || grid[r][c] === 'M') continue;
+    grid[r][c] = 'M'; p++;
   }
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       if (grid[r][c] === 'M') continue;
       grid[r][c] = getNeighbors(r, c).filter(([nr, nc]) => grid[nr][nc] === 'M').length;
     }
-  }
-}
-
-function chord(r, c) {
-  const val = grid[r][c];
-  if (!val || val === 'M') return;
-  const neighbors = getNeighbors(r, c);
-  const fCount = neighbors.filter(([nr, nc]) => flagged[nr][nc]).length;
-  if (fCount === val) {
-    neighbors.forEach(([nr, nc]) => doReveal(nr, nc));
   }
 }
 
@@ -371,56 +403,130 @@ function getNeighbors(r, c) {
   return n;
 }
 
+/* ---------- END GAME LOGIC ---------- */
 function checkWin() {
-  const count = revealed.flat().filter(Boolean).length;
-  if (count === (rows * cols) - minesTotal) endGame(true);
+  if (revealed.flat().filter(Boolean).length === (rows * cols) - minesTotal) endGame(true);
 }
 
 function endGame(win, clickedR = null, clickedC = null) {
-  isOver = true;
-  clearInterval(timerInterval);
+  isOver = true; clearInterval(timerInterval);
   document.getElementById('smiley').style.backgroundImage = `url('${win ? ASSETS.win : ASSETS.dead}')`;
-  if (win) {
-    playSound('win');
-    return;
-  }
-  revealMinesSequentially(clickedR, clickedC);
+  if (!win) revealMinesSequentially(clickedR, clickedC);
+  else playSound('win');
 }
 
+/* Reveal mines with sequential animation and explosion effects */
 function revealMinesSequentially(clickedR, clickedC) {
   const mines = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (grid[r][c] === 'M' && !flagged[r][c]) mines.push([r, c]);
-    }
-  }
+  grid.forEach((row, r) => row.forEach((val, c) => {
+    if (val === 'M') mines.push([r, c]);
+  }));
 
-  const startDelay = 260;
-  const gap = 140;
+  // Put clicked mine first (if present)
+  const clickedIdx = mines.findIndex(([r,c]) => r === clickedR && c === clickedC);
+  if (clickedIdx > -1) mines.unshift(mines.splice(clickedIdx, 1)[0]);
+
   mines.forEach(([r, c], i) => {
     animationTimeouts.push(setTimeout(() => {
       const el = document.getElementById(`c-${r}-${c}`);
-      if (el) {
-        setCellImg(el, r === clickedR && c === clickedC ? 'mineDeath' : 'mine');
-        el.classList.add('reveal-animate');
-        playSound('boom');
-        if (r === clickedR && c === clickedC) showBoomOnCell(r, c);
+      if (!el) return;
+      setCellImg(el, (r === clickedR && c === clickedC) ? 'mineDeath' : 'mine');
+      playSound('boom');
+      if (r === clickedR && c === clickedC) {
+        showBoom(r, c);
+        triggerShake();
+      } else {
+        // small flash for other mines
+        const flash = document.createElement('div');
+        flash.className = 'boom';
+        const rect = el.getBoundingClientRect();
+        flash.style.left = `${rect.left + rect.width / 2}px`;
+        flash.style.top  = `${rect.top  + rect.height / 2}px`;
+        flash.style.width = '100px';
+        flash.style.height = '100px';
+        document.body.appendChild(flash);
+        setTimeout(()=>flash.remove(), 500);
       }
-    }, startDelay + (i * gap)));
+      spawnParticles(el);
+    }, 200 + (i * 130)));
   });
 }
 
-function showBoomOnCell(r, c) {
+/* main radial flash + multiple small sparks */
+function showBoom(r, c) {
   const cell = document.getElementById(`c-${r}-${c}`);
+  if (!cell) return;
   const rect = cell.getBoundingClientRect();
   const boom = document.createElement('div');
   boom.className = 'boom';
   boom.style.left = `${rect.left + rect.width / 2}px`;
   boom.style.top  = `${rect.top  + rect.height / 2}px`;
   document.body.appendChild(boom);
-  setTimeout(() => boom.remove(), 800);
+  setTimeout(() => boom.remove(), 900);
 }
 
+/* spawn small particle sparks using Web Animations API for predictable movement */
+function spawnParticles(el) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const particleCount = 10 + Math.floor(Math.random()*8);
+
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = `${cx - 4}px`;
+    p.style.top  = `${cy - 4}px`;
+    document.body.appendChild(p);
+
+    // random direction & distance
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 90;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - (Math.random()*20); // slight upward bias
+    const rot = (Math.random()*360)|0;
+    const dur = 420 + Math.random()*300;
+
+    // animate
+    p.animate([
+      { transform: 'translate(0px,0px) scale(1) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.35) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(.12,.8,.33,1)' });
+
+    // cleanup
+    setTimeout(() => {
+      p.remove();
+    }, dur + 50);
+  }
+}
+
+/* add a brief shake to the board for impact */
+function triggerShake() {
+  const win = document.querySelector('.window');
+  if (!win) return;
+  win.classList.add('shake');
+  setTimeout(() => win.classList.remove('shake'), 420);
+}
+
+/* toggle mode button */
+function toggleMode() {
+  mode = mode === 'dig' ? 'flag' : 'dig';
+  const btn = document.getElementById('mode-toggle');
+  btn.textContent = mode === 'dig' ? 'MODE: ⛏️ Dig' : 'MODE: 🚩 Flag';
+  btn.classList.toggle('active');
+}
+
+/* keyboard shortcuts for desktop convenience */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'f' || e.key === 'F') toggleMode();
+  if (e.key === 'r' || e.key === 'R') initGame();
+});
+
+/* ensure smiley restarts */
+document.getElementById('smiley').addEventListener('click', initGame);
+
+/* initial game start */
 initGame();
 </script>
 </body>
